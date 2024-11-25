@@ -1,3 +1,5 @@
+const zlib = require('zlib')
+
 // Helper function to convert string to hex bytes
 function stringToHex (str, modelName) {
   const bytes = Buffer.from(str, 'utf-8')
@@ -60,10 +62,57 @@ function stringToHex (str, modelName) {
   return Buffer.from(hexString, 'hex')
 }
 
+/**
+ * Find and decompress gzipped data within a chunk
+ * @param {Buffer} chunk - The input data chunk
+ * @returns {string} The decompressed data as UTF-8 string, or empty string if decompression fails
+ */
+function handleGzippedData(chunk) {
+  // Search for gzip magic number (1f 8b 08)
+  const GZIP_MAGIC = [0x1f, 0x8b, 0x08];
+  let gzipStart = -1;
+
+  // Find the start of gzipped data
+  for (let i = 0; i < chunk.length - GZIP_MAGIC.length; i++) {
+    if (chunk[i] === GZIP_MAGIC[0] && 
+        chunk[i + 1] === GZIP_MAGIC[1] && 
+        chunk[i + 2] === GZIP_MAGIC[2]) {
+      gzipStart = i;
+      break;
+    }
+  }
+
+  // If gzip header is found
+  if (gzipStart !== -1) {
+    try {
+      // Extract and decompress the gzipped portion
+      const gzipData = chunk.slice(gzipStart);
+      const decompressedData = zlib.gunzipSync(gzipData);
+      
+      // Log for debugging
+      console.log('[DEBUG] Decompressed data length:', decompressedData.length);
+      console.log('[DEBUG] Decompressed data:', decompressedData.toString('utf-8'));
+      
+      return decompressedData.toString('utf-8');
+    } catch (error) {
+      console.error('[ERROR] Gzip decompression failed:', error.message);
+      return '';
+    }
+  }
+
+  return '';
+}
+
 // 封装函数，用于将 chunk 转换为 UTF-8 字符串
 function chunkToUtf8String (chunk) {
   if (chunk[0] === 0x01 || chunk[0] === 0x02 || (chunk[0] === 0x60 && chunk[1] === 0x0C)) {
     return ''
+  }
+
+  // Handle gzipped data
+  const decompressedData = handleGzippedData(chunk);
+  if (decompressedData) {
+    return decompressedData;
   }
 
   console.log('chunk:', Buffer.from(chunk).toString('hex'))
