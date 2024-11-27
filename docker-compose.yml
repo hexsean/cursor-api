@@ -8,4 +8,5 @@ services:
     ports:
       - "13777:3000"
     volumes:
-      - ./data:/app/data 
+      - ./data:/app/data
+    user: "1000:1000"
