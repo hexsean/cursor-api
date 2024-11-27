@@ -6,7 +6,14 @@ COPY package*.json ./
 
 RUN npm install
 COPY src/ ./src/
-RUN mkdir -p /app/data && chown -R node:node /app/data
+
+# 创建数据目录并设置权限
+RUN mkdir -p /app/data && \
+    chown -R node:node /app && \
+    chmod -R 755 /app/src
+
+# 切换到 node 用户
+USER node
 
 EXPOSE 3000
 

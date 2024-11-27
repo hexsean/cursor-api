@@ -4,7 +4,7 @@ const { getRandomIDPro } = require('./utils');
 
 class TokenChecksumManager {
     constructor(filePath = 'token-checksums.json') {
-        this.filePath = path.join(__dirname, filePath);
+        this.filePath = path.join('/app/data', filePath);
         this.mappings = new Map();
         this.initialized = false;
     }
