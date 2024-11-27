@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  cursor-api:
+    build: .
+    container_name: cursor-api
+    restart: unless-stopped
+    ports:
+      - "13777:3000"
+    volumes:
+      - ./data:/app/data 

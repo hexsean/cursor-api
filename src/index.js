@@ -2,6 +2,7 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { stringToHex, chunkToUtf8String, getRandomIDPro } = require('./utils.js');
 const app = express();
+const tokenManager = require('./tokenManager');
 
 // 中间件配置
 app.use(express.json());
@@ -40,11 +41,10 @@ app.post('/v1/chat/completions', async (req, res) => {
 
     const hexData = await stringToHex(messages, model);
 
-    // 获取checksum，req header中传递优先，环境变量中的等级第二，最后随机生成
+    // 获取checksum的新逻辑
     const checksum =
-      req.headers['x-cursor-checksum'] ??
-      process.env['x-cursor-checksum'] ??
-      `zo${getRandomIDPro({ dictType: 'max', size: 6 })}${getRandomIDPro({ dictType: 'max', size: 64 })}/${getRandomIDPro({ dictType: 'max', size: 64 })}`;
+      req.headers['x-cursor-checksum'] ?? // 1. 请求头优先
+      await tokenManager.getChecksum(authToken); // 2. 从文件/内存中获取或生成新的
 
     const response = await fetch('https://api2.cursor.sh/aiserver.v1.AiService/StreamChat', {
       method: 'POST',

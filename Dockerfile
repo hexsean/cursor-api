@@ -1,12 +1,18 @@
 FROM node:lts-alpine
 
-EXPOSE 3000
 ENV TZ=Asia/Shanghai
 
 WORKDIR /app
-COPY . .
+COPY package*.json ./
 
-RUN yarn config set registry https://registry.npmmirror.com/
-RUN yarn
+RUN npm install
 
-CMD ["npm", "run", "start"]
+COPY src/ ./src/
+
+RUN mkdir -p /app/data && chown -R node:node /app/data
+
+EXPOSE 3000
+
+USER node
+
+CMD ["node", "src/index.js"]
