@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   cursor-api:
-    build: .
+    image: hexsean/cursor2api:latest
     container_name: cursor-api
     restart: unless-stopped
     ports:
